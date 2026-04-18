@@ -9,6 +9,35 @@ description = "Translate plain business-language descriptions into portable AI a
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
+authors = [
+    { name = "Alberto Darold", email = "daroldalberto@gmail.com" },
+]
+keywords = [
+    "agents",
+    "ai",
+    "anthropic",
+    "claude",
+    "cli",
+    "llm",
+    "mcp",
+    "spec",
+    "tui",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
 dependencies = [
     "anthropic>=0.40.0",
     "httpx>=0.27.0",
@@ -18,6 +47,12 @@ dependencies = [
     "textual>=0.80.0",
     "typer>=0.12.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/alberdarold/writ"
+Repository = "https://github.com/alberdarold/writ"
+Issues = "https://github.com/alberdarold/writ/issues"
+Changelog = "https://github.com/alberdarold/writ/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 openai = ["openai>=1.0.0"]
