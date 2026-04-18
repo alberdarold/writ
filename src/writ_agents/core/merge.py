@@ -21,22 +21,33 @@ def merge_partial(base: PartialSpec, update: PartialSpec) -> PartialSpec:
     return PartialSpec.model_validate(merged)
 
 
+REQUIRED_FIELDS: list[str] = [
+    "name",
+    "archetype",
+    "tagline",
+    "purpose",
+    "audience",
+    "knowledge_sources",
+    "tools_needed",
+    "guardrails",
+    "oversight",
+    "personality_traits",
+    "system_prompt",
+    "target_runtime",
+]
+
+
 def is_spec_complete(partial: PartialSpec) -> tuple[bool, list[str]]:
-    """Check if all required fields are set. Returns (complete, missing_fields)."""
-    required = [
-        "name",
-        "archetype",
-        "tagline",
-        "purpose",
-        "audience",
-        "knowledge_sources",
-        "tools_needed",
-        "guardrails",
-        "oversight",
-        "personality_traits",
-        "system_prompt",
-        "target_runtime",
-    ]
+    """Check if all required fields are set. Returns (complete, missing_fields).
+
+    Empty lists count as missing — this matches `compute_confidence`, which
+    also ignores empty lists. An agent with zero guardrails isn't truly
+    complete.
+    """
     data = partial.model_dump()
-    missing = [f for f in required if data.get(f) is None]
+    missing: list[str] = []
+    for field in REQUIRED_FIELDS:
+        val = data.get(field)
+        if val is None or (isinstance(val, list) and len(val) == 0):
+            missing.append(field)
     return len(missing) == 0, missing

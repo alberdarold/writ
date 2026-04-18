@@ -4,30 +4,31 @@
 
 ```
 writ_agents/
-├── core/           — Data models, interview loop, merge logic
-├── providers/      — LLM provider abstractions
+├── core/           — Schemas, InterviewSession, interview_step, merge, confidence
+├── providers/      — LLM provider abstractions (Anthropic today)
 ├── resolver/       — Connector matching (catalog + LLM)
-├── compilers/      — Spec-to-format compilers
+├── compilers/      — Spec-to-format compilers + registry
+├── mcp/            — MCP server exposing tools for agent-to-agent use
 └── cli/            — Typer CLI + Textual TUI
 ```
 
 ## Data Flow
 
+Every caller — TUI, CLI, MCP server — drives the same primitive: `interview_step(session, provider, user_input)`. It's a plain async function that returns a `StepResult`. The async generator `run_interview` is a thin wrapper for push-driven consumers.
+
 ```
-User input (TUI or CLI)
+TUI / CLI / MCP tool
         │
         ▼
-  run_interview()          ← core/interview.py
-  (async generator)
+  interview_step()        ← core/step.py
+  (pure function on a mutable InterviewSession)
         │
         ├─ calls LLMProvider.call()   ← providers/anthropic.py
-        │  (Anthropic Claude)
+        │  (Anthropic Claude, retries + prompt caching)
         │
-        ├─ yields events:
-        │    AgentMessageEvent
-        │    SpecUpdateEvent
-        │    AwaitingInputEvent
-        │    InterviewCompleteEvent
+        ├─ parses + merges response
+        │
+        └─ returns StepResult {message, partial_spec, confidence, status, spec?}
         │
         ▼
   PartialSpec (accumulated via merge_partial)

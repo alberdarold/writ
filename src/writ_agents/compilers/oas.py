@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 from writ_agents.core.schema import ResolvedConnector, Spec
 

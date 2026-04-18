@@ -18,6 +18,13 @@ Footer {
     height: 1fr;
 }
 
+ConfidenceBar {
+    background: #0a0b10;
+    color: #8892a6;
+    height: 1;
+    padding: 0 2;
+}
+
 ChatPanel {
     width: 1fr;
     border-right: solid #13151d;
