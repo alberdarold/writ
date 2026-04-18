@@ -39,8 +39,8 @@ class WritApp(App[None]):
         self._partial: PartialSpec = PartialSpec()
         self._confidence: int = 0
         self._session: InterviewSession | None = None
-        self._provider: LLMProvider | None = provider
         self._provider_override: LLMProvider | None = provider
+        self._provider: LLMProvider | None = None
         self._connectors: list[ResolvedConnector] = []
         self._awaiting_input = False
         self._interview_task: asyncio.Task[None] | None = None
