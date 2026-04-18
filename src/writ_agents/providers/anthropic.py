@@ -60,6 +60,9 @@ class AnthropicProvider:
 
     async def call(self, conversation: list[dict[str, str]], system: str) -> str:
         """Call Claude with conversation + system prompt. Returns first text block."""
+        # Prompt caching on the system block. Anthropic activates caching only
+        # when the cached content exceeds ~1024 tokens for Sonnet/Opus; shorter
+        # prompts pass through without savings but the hint is harmless.
         system_blocks = [
             {
                 "type": "text",

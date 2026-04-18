@@ -4,18 +4,42 @@ from __future__ import annotations
 
 import json
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
+from writ_agents.core.json_extract import extract_json_arrays
 from writ_agents.core.schema import ResolvedConnector, Spec
 from writ_agents.providers.base import LLMProvider
 from writ_agents.resolver.catalog import CATALOG, find_by_id
 from writ_agents.resolver.prompt import RESOLVER_SYSTEM_PROMPT
+
+_REPAIR_PROMPT = (
+    "Your previous reply was not valid JSON. Return ONLY a JSON array of "
+    '{"business_term", "connector_id", "confidence"} objects. No prose, no fences.'
+)
 
 
 class _MatchItem(BaseModel):
     business_term: str
     connector_id: str
     confidence: int
+
+
+def _parse_matches(raw: str) -> list[_MatchItem] | None:
+    """Try each balanced JSON array in `raw`; return the first that validates."""
+    if not raw:
+        return None
+    for candidate in extract_json_arrays(raw):
+        try:
+            data = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(data, list):
+            continue
+        try:
+            return [_MatchItem.model_validate(m) for m in data]
+        except ValidationError:
+            continue
+    return None
 
 
 async def resolve_connectors(
@@ -33,19 +57,19 @@ async def resolve_connectors(
         f"Terms to match:\n{json.dumps(terms)}\n\nCatalog:\n{catalog_summary}"
     )
 
-    raw = await provider.call(
-        [{"role": "user", "content": user_message}],
-        RESOLVER_SYSTEM_PROMPT,
-    )
+    conversation: list[dict[str, str]] = [{"role": "user", "content": user_message}]
+    raw = await provider.call(conversation, RESOLVER_SYSTEM_PROMPT)
+    matches = _parse_matches(raw)
 
-    raw = raw.strip()
-    if raw.startswith("```"):
-        lines = raw.split("\n")
-        raw = "\n".join(lines[1:-1] if lines[-1] == "```" else lines[1:])
+    if matches is None:
+        conversation.append({"role": "assistant", "content": raw})
+        conversation.append({"role": "user", "content": _REPAIR_PROMPT})
+        raw2 = await provider.call(conversation, RESOLVER_SYSTEM_PROMPT)
+        matches = _parse_matches(raw2)
 
-    matches = [_MatchItem.model_validate(m) for m in json.loads(raw)]
+    if matches is None:
+        return []
 
-    # Group by connector_id
     grouped: dict[str, list[str]] = {}
     for match in matches:
         grouped.setdefault(match.connector_id, []).append(match.business_term)

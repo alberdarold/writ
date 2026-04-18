@@ -58,6 +58,17 @@ def build_server(
     """Build the FastMCP server. Factored for testing."""
     mcp = FastMCP("writ")
     store = SessionStore()
+    _provider_holder: dict[str, LLMProvider] = {}
+
+    def _get_provider() -> LLMProvider:
+        # One provider per server. Tests pass a factory that returns the same
+        # MockProvider anyway, so this only matters in production where each
+        # AnthropicProvider opens its own httpx client.
+        provider = _provider_holder.get("p")
+        if provider is None:
+            provider = provider_factory()
+            _provider_holder["p"] = provider
+        return provider
 
     @mcp.tool()
     async def writ_interview_start(
@@ -73,8 +84,11 @@ def build_server(
             {session_id, message, partial_spec, confidence, status}
         """
         session = store.create()
-        provider = provider_factory()
-        result = await interview_step(session, provider, user_input=initial_description)
+        provider = _get_provider()
+        async with store.lock_for(session.session_id):
+            result = await interview_step(
+                session, provider, user_input=initial_description
+            )
         return {
             "session_id": session.session_id,
             "message": result.message,
@@ -98,8 +112,9 @@ def build_server(
             a dict — pass it to writ_compile and writ_resolve_connectors.
         """
         session = store.require(session_id)
-        provider = provider_factory()
-        result = await interview_step(session, provider, user_input=answer)
+        provider = _get_provider()
+        async with store.lock_for(session_id):
+            result = await interview_step(session, provider, user_input=answer)
         payload: dict[str, Any] = {
             "message": result.message,
             "partial_spec": result.partial_spec.model_dump(exclude_none=True),
@@ -131,7 +146,7 @@ def build_server(
         """
         from writ_agents.core.session import InterviewSession
 
-        provider = provider_factory()
+        provider = _get_provider()
         session = InterviewSession()
         prompt = (
             f"{description}\n\n"
@@ -232,7 +247,7 @@ def build_server(
             icon, description, business_terms, mcp_url.
         """
         validated = Spec.model_validate(spec)
-        provider = provider_factory()
+        provider = _get_provider()
         resolved = await resolve_connectors(validated, provider)
         return {"connectors": [c.model_dump() for c in resolved]}
 

@@ -41,6 +41,15 @@ class WritApp(App[None]):
         self._connectors: list[ResolvedConnector] = []
         self._awaiting_input = False
         self._interview_task: asyncio.Task[None] | None = None
+        self._resolve_task: asyncio.Task[None] | None = None
+
+    def _cancel_pending(self) -> None:
+        """Cancel any interview/resolver tasks left over from a prior run."""
+        for attr in ("_interview_task", "_resolve_task"):
+            task: asyncio.Task[None] | None = getattr(self, attr)
+            if task is not None and not task.done():
+                task.cancel()
+            setattr(self, attr, None)
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -117,7 +126,7 @@ class WritApp(App[None]):
             chat.add_agent_message(
                 f"\u2705 Your agent **{result.spec.name}** is ready! Resolving connectors..."
             )
-            asyncio.create_task(self._resolve_and_announce())
+            self._resolve_task = asyncio.create_task(self._resolve_and_announce())
             self._awaiting_input = False
             return
 
@@ -169,6 +178,7 @@ class WritApp(App[None]):
         self.push_screen(RevealScreen(self._spec, self._connectors))
 
     def action_restart(self) -> None:
+        self._cancel_pending()
         self._spec = None
         self._partial = PartialSpec()
         self._confidence = 0
@@ -178,4 +188,4 @@ class WritApp(App[None]):
         self.query_one(ChatPanel).clear()
         self.query_one(SpecCard).clear()
         self.query_one(ConfidenceBar).set_confidence(0)
-        asyncio.create_task(self._start_interview())
+        self._interview_task = asyncio.create_task(self._start_interview())

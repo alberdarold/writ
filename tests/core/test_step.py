@@ -140,3 +140,47 @@ def test_parse_response_returns_none_on_garbage() -> None:
     assert _parse_response("") is None
     assert _parse_response("not json at all") is None
     assert _parse_response("{broken") is None
+
+
+def test_parse_response_picks_first_valid_when_two_objects_present() -> None:
+    # Fenced example JSON followed by the real reply. The old greedy regex
+    # matched from the first { to the last }, yielding invalid JSON.
+    raw = (
+        "Here's an example of the schema: "
+        '{"example": true, "note": "not a real reply"}\n'
+        "And here's my actual answer:\n"
+        '{"message": "hi", "confidence": 50, "status": "in_progress", "partial_spec": {}}'
+    )
+    parsed = _parse_response(raw)
+    assert parsed is not None
+    assert parsed.message == "hi"
+
+
+@pytest.mark.asyncio
+async def test_step_promotes_to_ready_when_retry_completes_spec() -> None:
+    # LLM claims ready with incomplete partial, then fills the gap on retry.
+    incomplete = {k: v for k, v in COMPLETE_PARTIAL.items() if k != "guardrails"}
+    provider = MockProvider(
+        [
+            _make_response(message="Opening"),
+            _make_response(
+                message="Claiming ready too early",
+                status="ready",
+                confidence=90,
+                partial_spec=incomplete,
+            ),
+            _make_response(
+                message="Here, fully ready now",
+                status="ready",
+                confidence=95,
+                partial_spec=COMPLETE_PARTIAL,
+            ),
+        ]
+    )
+    session = InterviewSession()
+    await interview_step(session, provider)
+    result = await interview_step(session, provider, user_input="go")
+    # Previously forced back to in_progress even though the retry was complete.
+    assert result.status == "ready"
+    assert result.spec is not None
+    assert result.spec.name == "Support Bot"

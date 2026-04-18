@@ -31,13 +31,34 @@ def save_api_key(key: str) -> None:
     _write_config(config)
 
 
+def _escape_toml_string(v: str) -> str:
+    """Escape a value for a TOML basic string (quoted with ")."""
+    out: list[str] = []
+    for ch in v:
+        if ch == "\\":
+            out.append("\\\\")
+        elif ch == '"':
+            out.append('\\"')
+        elif ch == "\n":
+            out.append("\\n")
+        elif ch == "\r":
+            out.append("\\r")
+        elif ch == "\t":
+            out.append("\\t")
+        elif ord(ch) < 0x20:
+            out.append(f"\\u{ord(ch):04x}")
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
 def _write_config(config: dict[str, object]) -> None:
     lines: list[str] = []
     for section, values in config.items():
         lines.append(f"[{section}]")
         assert isinstance(values, dict)
         for k, v in values.items():
-            lines.append(f'{k} = "{v}"')
+            lines.append(f'{k} = "{_escape_toml_string(str(v))}"')
         lines.append("")
     CONFIG_FILE.write_text("\n".join(lines))
 

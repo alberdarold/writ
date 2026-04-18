@@ -47,6 +47,29 @@ async def test_resolver_returns_connectors() -> None:
 
 
 @pytest.mark.asyncio
+async def test_resolver_repairs_invalid_json() -> None:
+    valid = _make_resolver_response(
+        [
+            {
+                "business_term": "send Slack message",
+                "connector_id": "slack",
+                "confidence": 95,
+            }
+        ]
+    )
+    provider = MockProvider(["this is not json at all", valid])
+    connectors = await resolve_connectors(SPEC, provider)
+    assert any(c.connector_id == "slack" for c in connectors)
+
+
+@pytest.mark.asyncio
+async def test_resolver_returns_empty_on_double_failure() -> None:
+    provider = MockProvider(["garbage one", "garbage two"])
+    connectors = await resolve_connectors(SPEC, provider)
+    assert connectors == []
+
+
+@pytest.mark.asyncio
 async def test_resolver_deduplicates() -> None:
     # Two terms map to the same connector
     matches: list[dict[str, object]] = [

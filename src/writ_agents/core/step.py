@@ -8,11 +8,11 @@ CLI, MCP server) build on this.
 from __future__ import annotations
 
 import json
-import re
 from typing import Literal
 
 from pydantic import BaseModel, ValidationError
 
+from writ_agents.core.json_extract import extract_json_objects
 from writ_agents.core.merge import is_spec_complete, merge_partial
 from writ_agents.core.prompt import INTERVIEW_SYSTEM_PROMPT
 from writ_agents.core.schema import (
@@ -29,7 +29,6 @@ REPAIR_PROMPT = (
     "Return ONLY a JSON object with keys: message, partial_spec, confidence, status. "
     "No markdown, no prose."
 )
-_JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
 
 
 class StepResult(BaseModel):
@@ -46,19 +45,12 @@ class StepResult(BaseModel):
 def _parse_response(raw: str) -> InterviewResponse | None:
     """Extract and validate an InterviewResponse from a raw LLM string.
 
-    Robust to fenced code blocks and trailing prose — grabs the first JSON
-    object it finds.
+    Robust to fenced code blocks and trailing prose — tries each balanced
+    JSON object found, in order.
     """
     if not raw:
         return None
-    candidates: list[str] = []
-    stripped = raw.strip()
-    if stripped.startswith("{"):
-        candidates.append(stripped)
-    match = _JSON_RE.search(raw)
-    if match:
-        candidates.append(match.group(0))
-    for candidate in candidates:
+    for candidate in extract_json_objects(raw):
         try:
             return InterviewResponse.model_validate(json.loads(candidate))
         except (json.JSONDecodeError, ValidationError):
@@ -165,34 +157,30 @@ async def interview_step(
                 session.accumulated, parsed.partial_spec
             )
             session.confidence = parsed.confidence
-            session.status = "in_progress"
+            complete, _ = is_spec_complete(session.accumulated)
+
+        if complete and parsed.status == "ready":
+            try:
+                spec = Spec.from_partial(session.accumulated)
+            except Exception as e:
+                session.status = "error"
+                session.error = f"Failed to build spec: {e}"
+                return StepResult(
+                    message=parsed.message,
+                    partial_spec=session.accumulated,
+                    confidence=session.confidence,
+                    status="error",
+                    error=session.error,
+                )
+            session.spec = spec
+            session.status = "ready"
             return StepResult(
                 message=parsed.message,
                 partial_spec=session.accumulated,
                 confidence=session.confidence,
-                status="in_progress",
+                status="ready",
+                spec=spec,
             )
-        try:
-            spec = Spec.from_partial(session.accumulated)
-        except Exception as e:
-            session.status = "error"
-            session.error = f"Failed to build spec: {e}"
-            return StepResult(
-                message=parsed.message,
-                partial_spec=session.accumulated,
-                confidence=session.confidence,
-                status="error",
-                error=session.error,
-            )
-        session.spec = spec
-        session.status = "ready"
-        return StepResult(
-            message=parsed.message,
-            partial_spec=session.accumulated,
-            confidence=session.confidence,
-            status="ready",
-            spec=spec,
-        )
 
     session.status = "in_progress"
     return StepResult(
