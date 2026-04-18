@@ -108,7 +108,13 @@ class WritApp(App[None]):
             )
         except Exception as e:
             chat.show_thinking(False)
-            chat.add_agent_message(f"\u26a0\ufe0f Provider error: {e}")
+            chat.add_agent_message(
+                f"\u26a0\ufe0f Provider error: {e}\nTry again, or press Ctrl+R to restart."
+            )
+            self._awaiting_input = True
+            input_widget = self.query_one(Input)
+            input_widget.disabled = False
+            input_widget.focus()
             return
 
         chat.show_thinking(False)

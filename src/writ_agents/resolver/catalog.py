@@ -23,7 +23,6 @@ CATALOG: list[ConnectorEntry] = [
         icon="📧",
         aliases=["email", "gmail", "google email", "inbox", "emails", "mail"],
         description="Read and send emails via Gmail",
-        mcp_url="https://mcp.gmail.com",
     ),
     ConnectorEntry(
         id="outlook",
@@ -32,7 +31,6 @@ CATALOG: list[ConnectorEntry] = [
         icon="📨",
         aliases=["outlook", "microsoft email", "office 365 email", "exchange"],
         description="Read and send emails via Microsoft Outlook",
-        mcp_url="https://mcp.microsoft.com/outlook",
     ),
     ConnectorEntry(
         id="imap",
@@ -55,7 +53,6 @@ CATALOG: list[ConnectorEntry] = [
             "instant messages",
         ],
         description="Send and read Slack messages",
-        mcp_url="https://mcp.slack.com",
     ),
     ConnectorEntry(
         id="teams",
@@ -70,7 +67,6 @@ CATALOG: list[ConnectorEntry] = [
             "teams messages",
         ],
         description="Send and read Microsoft Teams messages",
-        mcp_url="https://mcp.microsoft.com/teams",
     ),
     ConnectorEntry(
         id="hubspot",
@@ -79,7 +75,6 @@ CATALOG: list[ConnectorEntry] = [
         icon="🔶",
         aliases=["hubspot", "crm", "customer records", "contacts", "deals", "pipeline"],
         description="Read and update HubSpot CRM records",
-        mcp_url="https://mcp.hubspot.com",
     ),
     ConnectorEntry(
         id="salesforce",
@@ -95,7 +90,6 @@ CATALOG: list[ConnectorEntry] = [
             "accounts",
         ],
         description="Access Salesforce CRM data and records",
-        mcp_url="https://mcp.salesforce.com",
     ),
     ConnectorEntry(
         id="pipedrive",
@@ -104,7 +98,6 @@ CATALOG: list[ConnectorEntry] = [
         icon="🎯",
         aliases=["pipedrive", "pipedrive crm", "sales pipeline", "deals pipeline"],
         description="Read and update Pipedrive deals and contacts",
-        mcp_url="https://mcp.pipedrive.com",
     ),
     ConnectorEntry(
         id="google_sheets",
@@ -119,7 +112,6 @@ CATALOG: list[ConnectorEntry] = [
             "google spreadsheet",
         ],
         description="Read and write Google Sheets data",
-        mcp_url="https://mcp.google.com/sheets",
     ),
     ConnectorEntry(
         id="airtable",
@@ -128,7 +120,6 @@ CATALOG: list[ConnectorEntry] = [
         icon="🗃️",
         aliases=["airtable", "airtable base", "airtable table", "no-code database"],
         description="Read and write Airtable records",
-        mcp_url="https://mcp.airtable.com",
     ),
     ConnectorEntry(
         id="notion",
@@ -137,7 +128,6 @@ CATALOG: list[ConnectorEntry] = [
         icon="📝",
         aliases=["notion", "notion docs", "notion database", "notion pages", "wiki"],
         description="Read and write Notion pages and databases",
-        mcp_url="https://mcp.notion.com",
     ),
     ConnectorEntry(
         id="postgresql",
@@ -153,7 +143,6 @@ CATALOG: list[ConnectorEntry] = [
             "relational database",
         ],
         description="Query PostgreSQL databases",
-        mcp_url="https://mcp.postgresql.org",
     ),
     ConnectorEntry(
         id="google_drive",
@@ -162,7 +151,6 @@ CATALOG: list[ConnectorEntry] = [
         icon="📁",
         aliases=["google drive", "drive", "gdrive", "google files", "file storage"],
         description="Read files from Google Drive",
-        mcp_url="https://mcp.google.com/drive",
     ),
     ConnectorEntry(
         id="dropbox",
@@ -171,7 +159,6 @@ CATALOG: list[ConnectorEntry] = [
         icon="📦",
         aliases=["dropbox", "dropbox files", "file sharing"],
         description="Access files stored in Dropbox",
-        mcp_url="https://mcp.dropbox.com",
     ),
     ConnectorEntry(
         id="zendesk",
@@ -186,7 +173,6 @@ CATALOG: list[ConnectorEntry] = [
             "tickets",
         ],
         description="Read and update Zendesk support tickets",
-        mcp_url="https://mcp.zendesk.com",
     ),
     ConnectorEntry(
         id="jira",
@@ -202,7 +188,6 @@ CATALOG: list[ConnectorEntry] = [
             "task tracker",
         ],
         description="Read and create Jira issues",
-        mcp_url="https://mcp.atlassian.com/jira",
     ),
     ConnectorEntry(
         id="google_calendar",
@@ -218,7 +203,6 @@ CATALOG: list[ConnectorEntry] = [
             "events",
         ],
         description="Read and create Google Calendar events",
-        mcp_url="https://mcp.google.com/calendar",
     ),
     ConnectorEntry(
         id="web_search",
@@ -234,7 +218,6 @@ CATALOG: list[ConnectorEntry] = [
             "search the web",
         ],
         description="Search the web for current information",
-        mcp_url="https://mcp.search.com",
     ),
     ConnectorEntry(
         id="manual",

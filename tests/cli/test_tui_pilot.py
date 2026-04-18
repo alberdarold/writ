@@ -134,23 +134,53 @@ async def test_tui_handles_missing_api_key_gracefully() -> None:
     import os
 
     prior = os.environ.pop("ANTHROPIC_API_KEY", None)
+    # Also make sure the config file isn't picked up during the test.
+    import writ_agents.cli.config as cfg
+
+    original_get = cfg.get_api_key
+    cfg.get_api_key = lambda: None  # type: ignore[assignment]
     try:
-        # Also make sure the config file isn't picked up during the test.
-        import writ_agents.cli.config as cfg
-
-        original_get = cfg.get_api_key
-        cfg.get_api_key = lambda: None  # type: ignore[assignment]
-
         app = WritApp()
         async with app.run_test() as pilot:
             for _ in range(5):
                 await pilot.pause()
             texts = _chat_texts(app.query_one(ChatPanel))
             assert any("API key" in t for t in texts), texts
-        cfg.get_api_key = original_get  # type: ignore[assignment]
     finally:
+        cfg.get_api_key = original_get  # type: ignore[assignment]
         if prior is not None:
             os.environ["ANTHROPIC_API_KEY"] = prior
+
+
+@pytest.mark.asyncio
+async def test_tui_recovers_after_provider_error() -> None:
+    """A transient provider error must leave the input widget usable so the
+    user can retry without restarting the whole session."""
+
+    class FlakyProvider:
+        def __init__(self) -> None:
+            self._calls = 0
+
+        async def call(self, conversation: list[dict[str, str]], system: str) -> str:
+            self._calls += 1
+            if self._calls == 1:
+                raise RuntimeError("boom: rate limited")
+            return _canned("Recovered — what should it do?", confidence=25)
+
+    provider = FlakyProvider()
+    app = WritApp(provider=provider)  # type: ignore[arg-type]
+
+    async with app.run_test() as pilot:
+        from textual.widgets import Input
+
+        for _ in range(8):
+            await pilot.pause()
+            texts = _chat_texts(app.query_one(ChatPanel))
+            if any("Provider error" in t for t in texts):
+                break
+        assert any("Provider error" in t for t in texts), texts
+        assert app._awaiting_input, "Input must be re-enabled after error"
+        assert not app.query_one(Input).disabled
 
 
 @pytest.mark.asyncio

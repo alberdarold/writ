@@ -15,7 +15,8 @@ FIELD_WEIGHTS: dict[str, int] = {
     "name": 5,
     "tagline": 5,
     "archetype": 5,
-    "system_prompt": 10,
+    "system_prompt": 5,
+    "target_runtime": 5,
 }
 
 

@@ -24,6 +24,7 @@ def test_confidence_caps_at_100() -> None:
         oversight="autonomous",
         personality_traits=["friendly"],
         system_prompt="You are...",
+        target_runtime="all",
     )
     assert compute_confidence(partial) == 100
 
