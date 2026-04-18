@@ -1,0 +1,18 @@
+{
+  "description": "Support triage agent interview",
+  "expected_spec": {
+    "name": "Support Triage Bot",
+    "archetype": "triage",
+    "tagline": "I help you route customer issues to the right team fast.",
+    "purpose": "Automatically classify and route incoming customer support tickets.",
+    "audience": "Support team managers",
+    "knowledge_sources": ["support ticket history", "product documentation"],
+    "tools_needed": ["send Slack message", "update ticket status"],
+    "guardrails": ["Never close a ticket without human review"],
+    "oversight": "human_in_loop",
+    "personality_traits": ["concise", "professional"],
+    "system_prompt": "You are a support triage assistant. Route based on severity.",
+    "target_runtime": "all",
+    "schema_version": "0.1.0"
+  }
+}

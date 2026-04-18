@@ -1,0 +1,87 @@
+/* Writ TUI Styles */
+
+Screen {
+    background: #0a0b10;
+    color: #ecf0f8;
+}
+
+Header {
+    background: #13151d;
+    color: #ecf0f8;
+}
+
+Footer {
+    background: #13151d;
+}
+
+#main {
+    height: 1fr;
+}
+
+ChatPanel {
+    width: 1fr;
+    border-right: solid #13151d;
+}
+
+SpecCard {
+    width: 1.1fr;
+}
+
+Input {
+    background: #13151d;
+    border: solid #8b5cf6;
+    dock: bottom;
+    height: 3;
+}
+
+Input:focus {
+    border: solid #8b5cf6;
+}
+
+.user-message {
+    background: #13151d;
+    border: solid #8b5cf6;
+    color: #ecf0f8;
+    padding: 0 1;
+    margin: 0 0 1 8;
+}
+
+.agent-message {
+    color: #ecf0f8;
+    padding: 0 0 1 0;
+    margin: 0 8 1 0;
+}
+
+.thinking {
+    color: #8892a6;
+}
+
+.spec-name {
+    color: #ecf0f8;
+    text-style: bold;
+}
+
+.spec-archetype {
+    color: #8b5cf6;
+}
+
+.spec-tagline {
+    color: #8892a6;
+}
+
+.spec-section-title {
+    color: #8b5cf6;
+    text-style: bold;
+}
+
+.chip-danger {
+    color: #ef4444;
+}
+
+Button.-primary {
+    background: #8b5cf6;
+}
+
+TabbedContent {
+    height: 1fr;
+}
