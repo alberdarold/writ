@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -15,9 +14,7 @@ from writ_agents.cli.widgets.confidence_bar import ConfidenceBar
 from writ_agents.cli.widgets.spec_card import SpecCard
 from writ_agents.core.schema import PartialSpec, ResolvedConnector, Spec
 from writ_agents.core.session import InterviewSession
-
-if TYPE_CHECKING:
-    from writ_agents.providers.base import LLMProvider
+from writ_agents.providers.base import LLMProvider
 
 
 class WritApp(App[None]):
@@ -31,13 +28,19 @@ class WritApp(App[None]):
         Binding("ctrl+e", "export", "Export", show=True),
     ]
 
-    def __init__(self) -> None:
+    def __init__(self, provider: LLMProvider | None = None) -> None:
+        """
+        provider: Optional LLMProvider override. When omitted, the app builds
+        an AnthropicProvider from the saved config / env var. Tests inject a
+        MockProvider here so the UI can be driven without network calls.
+        """
         super().__init__()
         self._spec: Spec | None = None
         self._partial: PartialSpec = PartialSpec()
         self._confidence: int = 0
         self._session: InterviewSession | None = None
-        self._provider: LLMProvider | None = None
+        self._provider: LLMProvider | None = provider
+        self._provider_override: LLMProvider | None = provider
         self._connectors: list[ResolvedConnector] = []
         self._awaiting_input = False
         self._interview_task: asyncio.Task[None] | None = None
@@ -64,26 +67,28 @@ class WritApp(App[None]):
         await self._start_interview()
 
     async def _start_interview(self) -> None:
-        from writ_agents.cli.config import get_api_key
-        from writ_agents.providers.anthropic import AnthropicProvider
-
         chat = self.query_one(ChatPanel)
         input_widget = self.query_one(Input)
         input_widget.disabled = True
 
-        key = get_api_key()
-        if not key:
-            chat.add_agent_message(
-                "Welcome to Writ! I need your Anthropic API key to continue.\n"
-                "Set ANTHROPIC_API_KEY and restart, or run `writ config` to save it."
-            )
-            return
+        if self._provider_override is not None:
+            self._provider = self._provider_override
+        else:
+            from writ_agents.cli.config import get_api_key
+            from writ_agents.providers.anthropic import AnthropicProvider
 
-        try:
-            self._provider = AnthropicProvider(api_key=key)
-        except ValueError as e:
-            chat.add_agent_message(f"Configuration error: {e}")
-            return
+            key = get_api_key()
+            if not key:
+                chat.add_agent_message(
+                    "Welcome to Writ! I need your Anthropic API key to continue.\n"
+                    "Set ANTHROPIC_API_KEY and restart, or run `writ config` to save it."
+                )
+                return
+            try:
+                self._provider = AnthropicProvider(api_key=key)
+            except ValueError as e:
+                chat.add_agent_message(f"Configuration error: {e}")
+                return
 
         self._session = InterviewSession()
         chat.show_thinking(True)
