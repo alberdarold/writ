@@ -4,6 +4,19 @@ All notable changes to writ-agents will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] - 2026-04-19
+
+### Fixed
+- **TUI no longer locks up after a provider error.** A transient rate-limit or network failure during `interview_step` now surfaces the error and re-enables the input widget so the user can retry without restarting.
+- **Confidence scoring aligned with completeness check.** `target_runtime` was required by `is_spec_complete` but ignored by `compute_confidence`, so the interview could cap at 100 while still being formally incomplete. Added to `FIELD_WEIGHTS`.
+- **Removed 17 fabricated connector `mcp_url`s** (e.g. `https://mcp.slack.com`) from the catalog. Those endpoints don't exist and would have shipped into compiled agent specs. Compilers already guard on `None`, so output is silent about MCP URLs until a real endpoint is supplied.
+- **Bundle export is now atomic.** `RevealScreen` writes into a sibling tempdir and `os.replace`s into place, so a failure mid-write no longer leaves a half-populated export directory.
+
+### Internal
+- New TUI pilot test exercises the provider-error recovery path.
+- Test monkey-patch restoration moved into `finally:` so a failing assertion can't leak into other tests.
+- Dropped redundant `_provider` / `_provider_override` double-assignment in `WritApp.__init__`.
+
 ## [0.2.0] - 2026-04-18
 
 ### Added
